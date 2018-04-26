@@ -14,7 +14,6 @@ Shell scripts that help u auto subtree a directory as a sub repository using git
 ## Noted
 - 对于`sub.sh`可以加载之前的配置文件`path.txt`，里面包含仓库名，子目录路径，子目录名和当前脚本根目录。如果配置文件不存在，会重新创建
 - 现在`groupSub`还不能实现**merge**功能
-- 可以加载之前的配置文件`path.txt`。里面包含仓库名，子目录路径，子目录名和当前脚本根目录。如果配置文件不存在，会重新创建
 - 在windows git bash环境下测试通过
 - 由于在windows环境下编写的shell脚本在linux环境下会报错，请复制本脚本内容然后在linux下新建一个一样的文件。
 
