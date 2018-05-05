@@ -3,6 +3,8 @@
 function print(){
    echo ">>>current in $PWD"
 }
+
+
 #place your remote address here
 Server=(
 "wendi@192.168.1.101:/home/wendi/test/server1/.git"
@@ -49,10 +51,10 @@ if [[ $1 = 'init' ]]; then
   git push origin master
   cd ../
 elif [[ $1 = 'push' ]]; then
-	#push to all subdir remote
     git add --all
 	git commit -m "all push"
 	if [[ $2 = 'subrepo' ]]; then
+		# push and update subrepo 
 		for server in ${Server[@]}; do
 		  temp=$(echo $(basename ${server%/*}))
 		  subdir_path=Server/$temp  
@@ -65,17 +67,19 @@ elif [[ $1 = 'push' ]]; then
 	cd  ../
 	echo "push done!"
 elif [[ $1 = 'pull' ]]; then
-	#pull from all subdir then push to  master remote
-  for server in ${Server[@]}; do
-  	temp=$(echo $(basename ${server%/*}))
-    subdir_path=Server/$temp
-   	git subtree pull --prefix=$subdir_path --squash $temp master
-  done
-  git add .
-  git commit -m "all pull"
-  git push origin master
-  cd ../
-  echo "all pull done!"
+	if [[ $2 = 'subrepo' ]];then
+		# pull from sub repos	
+		for server in ${Server[@]}; do
+		temp=$(echo $(basename ${server%/*}))
+		subdir_path=Server/$temp
+		git subtree pull --prefix=$subdir_path --squash $temp master
+		done
+	else
+		#pull itself
+		git pull
+	fi
+	cd ../
+	echo "all pull done!"
 elif [[ $1 = 'checkout' ]]; then
 	if [[ $2 == -* ]]; then
 		case $2 in
@@ -103,7 +107,7 @@ elif [[ $1 = 'status' ]]; then
 	fi
 	cd ../
 elif [[ $1 = 'diff' ]]; then
-	if [[ $3 -ne 0 ]]; then
+	if [[ "$3" != "" ]]; then
 		git diff $2 $3
 	else
 		case $2 in
@@ -179,38 +183,88 @@ elif [[ $1 = 'branch' ]]; then
 	
 	fi
 	cd ../
-elif [[ $1 == 'merge' ]]; then
+elif [[ $1 = 'merge' ]]; then
 	# $2 represemt branch 1 name that you want to merge
-	if [[ $2 -ne 0 ]];then
-		echo "Please offer option"
-		case $3 in
-		--abort)
-			git merge $2 --abort
-			;;
-		--commit|-nocommit)
-			if [[ $3 == '--commit' ]];then
-				git merge $2 --commit 
+	branch=$2
+	options=$3
+	if [ "$branch" != "" ];then
+		if [ "$options" != "" ]; then
+			case $options in
+			--abort)
+				git merge $branch --abort
+				;;
+			--commit|-nocommit)
+				if [[ $options == '--commit' ]];then
+					git merge $branch --commit 
+				else
+					git merge $branch --no-commit
+				fi
+				;;
+			-e|--edit|--no-edit)
+				if [[ $options == '--edit'||'-e' ]];then
+					git merge $branch --edit
+				else
+					git merge $branch --no-edit
+				fi
+				;;
+			-squash|--no-squash)
+				if [[ $options == '--squash' ]];then
+					git merge $branch --squash
+				else
+					git merge $branch --no-squash
+				fi
+				;;
+			esac
+		else
+			echo "Please offer option"
+		fi
+	else
+		echo "Please enter the branch you want to merge!" 
+	fi
+	cd ../
+elif [[ $1 = 'stash' ]]; then
+	if [[ $2 != "" ]] ;then
+		case $2 in 
+		pop|apply)
+			if [[ $2 == "pop" ]] ;then
+				git stash pop
 			else
-				git merge $2 --no-commit
+				# $3 represent stash here
+				git stash apply $3
 			fi
 			;;
-		-e|--edit|--no-edit)
-			if [[ $3 == '--edit'||'-e' ]];then
-				git merge $2 --edit
-			else
-				git merge $2 --no-edit
-			fi
+		list)
+			git stash list
 			;;
-		-squash|--no-squash)
-			if [[ $3 == '--squash' ]];then
-				git merge $2 --squash
-			else
-				git merge $2 --no-squash
-			fi
+		clear)
+			git stash clear
+			;;
+		save)
+			# $3 represent message 
+			git stash save $3
 			;;
 		esac
+	
 	else
-		echo "Please enter the branch you want to merge!"
+		git stash
 	fi
+	cd ../
+elif [[ $1 = "show" ]]; then
+	git show
+	cd ../
+elif [[ $1 = "--help" ]]; then
+	echo "    init        init repository using given series of repositories' address"
+	echo "    push        push repository to remote or push changes to remote sub repos"
+	echo "    pull        pull changes from remote or pull changes from remote sub repos"
+	echo "    checkout    basic implementation of git checkout"
+	echo "    status      basic implementation of git status"
+	echo "    diff        basic implementation of git diff"
+	echo "    reset       basic implementation of git reset"
+	echo "    clone       basic implementation of git clone"
+	echo "    commit      basic implementation of git commit"
+	echo "    merge       basic implementation of git merge"
+	echo "    branch      basic implementation of git branch"
+	echo "    stash       basic implementation of git stash"
+	echo "    show        basic implementation of git show"
 	cd ../
 fi
