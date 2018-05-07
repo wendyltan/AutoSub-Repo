@@ -9,6 +9,14 @@ outfile=default.xml
 tabs=0
 #clear the file everytime rerun this script
 cat /dev/null > 'default.xml'
+remote_name=$1
+default_branch=$2
+if [[ $remote_name -eq "" ]]; then
+	remote_name="github"
+fi
+if [[ $default_branch -eq "" ]]; then
+	default_branch="master"
+fi
 
 array_index=0
 path=""
@@ -57,15 +65,41 @@ tag_remote(){
 tag_default(){
 	out_tabs
 	str=""
+	sync_cvalue=false
+	sync_svalue=false
+	if [[ ${3} -eq true ]]; then
+		sync_cvalue=$3
+	fi
+	if [[ ${4} -eq true ]]; then
+		sync_svalue=$4 
+	fi
+
+
 	str='default revision="'${1}'"\n\t\t\t
-			     remote="'${2}'"/'
+			     remote="'${2}'"\n\t\t\t
+			     sync_j="4"\n\t\t\t
+			     sync_c="'$sync_cvalue'"\n\t\t\t
+			     sync_s="'$sync_svalue'"/'
     put $str
 }
 tag_project(){
 	out_tabs
 	str=""
+	sync_cvalue=false
+	sync_svalue=false
+	if [[ ${3} -eq true ]]; then
+		sync_cvalue=$3
+	fi
+	if [[ ${4} -eq true ]]; then
+		sync_svalue=$4 
+	fi
+
 	str='project path="'${1}'"\n\t\t\t
-			     name="'${2}'"/'
+			     name="'${2}'"\n\t\t\t
+			     sync_c="'$sync_cvalue'"\n\t\t\t
+			     sync_s="'$sync_svalue'"\n\t\t\t
+			     revision="'${5}'"\n\t\t\t
+			     remote="'${6}'"/'
     put $str
 }
 
@@ -110,18 +144,25 @@ gen_XML(){
 	put_head 'xml version="1.0" encoding="UTF-8"'
 	tag_start 'manifest'
 	#default can only have one!
-	tag_default master github
-	tag_remote github $path
+	tag_default $2 $1 false true 
+	#but you can have multiple remote.
+	tag_remote $1 $path
 	for address in ${arr[@]}; do
-		tag_project repos/$address $address
+		tag_project repos/$address $address false true $2 $1
 	done
 	tag_end 'manifest'
 	echo "manifest file generate success!"
 }
 
+print_Info(){
+	echo '-----------------generated xml file content:--------------'
+	echo `cat default.xml`
+	echo '---------------------------end:---------------------------'
+}
 
+# main process goes here...
 read_address
-gen_XML 
-echo '-----------------generated xml file content:--------------'
-echo `cat default.xml`
-echo '---------------------------end:---------------------------'
+gen_XML $remote_name $default_branch
+print_Info
+
+
