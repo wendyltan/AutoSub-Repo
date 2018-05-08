@@ -11,6 +11,8 @@ tabs=0
 cat /dev/null > 'default.xml'
 remote_name=$1
 default_branch=$2
+
+#default for remote name and default branch
 if [[ $remote_name -eq "" ]]; then
 	remote_name="github"
 fi
@@ -105,12 +107,16 @@ tag_project(){
 
 check_can_clone(){
 	# uncomment here when internet is usable!
-	# if ! git clone ${1};then
-	#     echo >&2 "error: you don't have permission on this repository!skipping..."
-	# else
-	# 	write_info ${1}
-	# fi
-	write_info ${1}
+	if ! git clone ${1};then
+	    echo >&2 "error: you don't have permission on this repository!skipping..."
+	else
+		file_name=$(echo $(basename ${1}))
+		repo_name=$(echo $file_name | sed 's/\.[^.]*$//')
+		rm -rf $repo_name
+		echo "deleting temporaly cloned repo... >>>"
+		write_info ${1}
+	fi
+	# write_info ${1}
 }
 
 read_address(){
@@ -120,7 +126,7 @@ read_address(){
 	else
 		for line in $(cat address.txt)
 		do 
-			echo "read address :${line}"
+			echo "read address :${line} >>>"
 			#检查这个仓库是否可以clone（是否有权限）
 			check_can_clone ${line}
 		done
